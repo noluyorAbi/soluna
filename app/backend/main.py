@@ -99,6 +99,21 @@ def generate_html_table(dataframe, title, table_id):
         "</thead><tbody>"
     )
     for index, row in dataframe.iterrows():
+        spenden_verhältnis = row['Spenden_Verhältnis']
+        # Versuchen, den Spenden-Verhältnis-Wert in eine Zahl umzuwandeln
+        try:
+            ratio = float(spenden_verhältnis)
+            if ratio > 1:
+                color = "green"
+            elif ratio < 1:
+                color = "red"
+            else:
+                color = "black"  # Falls das Verhältnis genau 1 ist
+            ratio_html = f"<td style='color: {color};'>{html.escape(str(spenden_verhältnis))}</td>"
+        except ValueError:
+            # Falls der Wert nicht numerisch ist, keine Farbe anwenden
+            ratio_html = f"<td>{html.escape(str(spenden_verhältnis))}</td>"
+
         table_html += (
             "<tr>"
             f"<td>{index + 1}</td>"
@@ -108,11 +123,12 @@ def generate_html_table(dataframe, title, table_id):
             f"<td>{row['donations']}</td>"
             f"<td>{row['donationsReceived']}</td>"
             f"<td>{row['attackWins']}</td>"
-            f"<td>{html.escape(row['Spenden_Verhältnis'])}</td>"
+            f"{ratio_html}"
             "</tr>"
         )
     table_html += "</tbody></table>"
     return table_html
+
 
 def generate_full_html_table(dataframe, title, table_id):
     table_html = f"<h3>{html.escape(title)}</h3><table id='{html.escape(table_id)}'>"
@@ -131,6 +147,21 @@ def generate_full_html_table(dataframe, title, table_id):
         "</thead><tbody>"
     )
     for index, row in dataframe.iterrows():
+        spenden_verhältnis = row['Spenden_Verhältnis']
+        # Versuchen, den Spenden-Verhältnis-Wert in eine Zahl umzuwandeln
+        try:
+            ratio = float(spenden_verhältnis)
+            if ratio > 1:
+                color = "green"
+            elif ratio < 1:
+                color = "red"
+            else:
+                color = "black"  # Falls das Verhältnis genau 1 ist
+            ratio_html = f"<td style='color: {color};'>{html.escape(str(spenden_verhältnis))}</td>"
+        except ValueError:
+            # Falls der Wert nicht numerisch ist, keine Farbe anwenden
+            ratio_html = f"<td>{html.escape(str(spenden_verhältnis))}</td>"
+
         table_html += (
             "<tr>"
             f"<td>{index + 1}</td>"
@@ -140,11 +171,60 @@ def generate_full_html_table(dataframe, title, table_id):
             f"<td>{row['donations']}</td>"
             f"<td>{row['donationsReceived']}</td>"
             f"<td>{row['attackWins']}</td>"
-            f"<td>{html.escape(row['Spenden_Verhältnis'])}</td>"
+            f"{ratio_html}"
             "</tr>"
         )
     table_html += "</tbody></table>"
     return table_html
+
+
+def generate_full_html_table(dataframe, title, table_id):
+    table_html = f"<h3>{html.escape(title)}</h3><table id='{html.escape(table_id)}'>"
+    table_html += (
+        "<thead>"
+        "<tr>"
+        "<th>Rang</th>"
+        "<th>Name</th>"
+        "<th>Aktivität</th>"
+        "<th>Trophäen</th>"
+        "<th>Spenden Gegeben</th>"
+        "<th>Spenden Erhalten</th>"
+        "<th>Gewonnene Angriffe</th>"
+        "<th>Spenden Verhältnis</th>"
+        "</tr>"
+        "</thead><tbody>"
+    )
+    for index, row in dataframe.iterrows():
+        spenden_verhältnis = row['Spenden_Verhältnis']
+        # Versuchen, den Spenden-Verhältnis-Wert in eine Zahl umzuwandeln
+        try:
+            ratio = float(spenden_verhältnis)
+            if ratio > 1:
+                color = "green"
+            elif ratio < 1:
+                color = "red"
+            else:
+                color = "black"  # Falls das Verhältnis genau 1 ist
+            ratio_html = f"<td style='color: {color};'>{html.escape(str(spenden_verhältnis))}</td>"
+        except ValueError:
+            # Falls der Wert nicht numerisch ist, keine Farbe anwenden
+            ratio_html = f"<td>{html.escape(str(spenden_verhältnis))}</td>"
+
+        table_html += (
+            "<tr>"
+            f"<td>{index + 1}</td>"
+            f"<td>{html.escape(str(row['name']))}</td>"
+            f"<td>{row['Aktivität']:.2f}</td>"
+            f"<td>{row['trophies']}</td>"
+            f"<td>{row['donations']}</td>"
+            f"<td>{row['donationsReceived']}</td>"
+            f"<td>{row['attackWins']}</td>"
+            f"{ratio_html}"
+            "</tr>"
+        )
+    table_html += "</tbody></table>"
+    return table_html
+
 
 def create_interactive_activity_plot(members_data, donation_weight=1.0, donation_received_weight=0.5,
                                      attack_win_weight=1.5, trophy_scale=1000.0, attack_base_weight=1.0):
@@ -268,7 +348,8 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         ).update_traces(
             name='Durchschnittliche Aktivität',
             line=dict(color="RoyalBlue", width=2, dash="dash"),
-            hoverinfo='skip'
+            hoverinfo='skip',
+            showlegend=True  # Sicherstellen, dass die Linie in der Legende erscheint
         ).data[0]
     )
 
@@ -282,11 +363,12 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         ).update_traces(
             name='Median Aktivität',
             line=dict(color="Green", width=2, dash="dot"),
-            hoverinfo='skip'
+            hoverinfo='skip',
+            showlegend=True  # Sicherstellen, dass die Linie in der Legende erscheint
         ).data[0]
     )
 
-    # Hinzufügen von Annotationen für die Linien
+    # Hinzufügen von Annotationen für die Linien (optional)
     fig.add_annotation(
         x=df['Spieler_ID'].max(),
         y=mean_activity,
@@ -433,7 +515,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
                     "searching": false
                 }});
                 $('#full_table').DataTable({{
-                    "pageLength": 5,
+                    "pageLength": 10,
                     "lengthMenu": [5, 10, 25, 50],
                     "paging": true,
                     "searching": true
@@ -445,6 +527,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
     """
 
     return full_html
+
 
 # FastAPI-Endpunkt definieren
 @app.get("/clan-activity")
