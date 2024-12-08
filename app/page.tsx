@@ -94,21 +94,11 @@ export default function Home() {
           </p>
           <p className="mt-2">
             <a
-              href="https://example.com"
+              href="/Datenschutzrichtlinien"
               className="text-blue-400 hover:text-white"
-              target="_blank"
               rel="noopener noreferrer"
             >
               Datenschutzrichtlinien
-            </a>{" "}
-            |{" "}
-            <a
-              href="https://example.com"
-              className="text-blue-400 hover:text-white"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Impressum
             </a>
           </p>
         </div>
