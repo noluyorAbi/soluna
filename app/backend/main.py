@@ -93,6 +93,12 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         print("Keine Daten zum Plotten verfügbar.")
         return "<p>Keine Daten zum Plotten verfügbar.</p>"
 
+    # Sicherstellen, dass alle erforderlichen Spalten vorhanden sind
+    required_columns = ['name', 'trophies', 'donations', 'donationsReceived', 'attackWins']
+    for col in required_columns:
+        if col not in df.columns:
+            df[col] = 0  # Setze fehlende Spalten auf 0
+
     # Gewichtung der gewonnenen Angriffe basierend auf Trophäen
     df['attackWinWeight'] = attack_base_weight + (df['trophies'] / trophy_scale)
 
@@ -101,10 +107,20 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
                       (df['donationsReceived'] * donation_received_weight) + \
                       (df['attackWins'] * df['attackWinWeight'])
 
-    # Berechnung des Spenden-Verhältnisses
-    df['Spenden_Verhältnis'] = df.apply(
-        lambda row: row['donations'] / row['donationsReceived'] if row['donationsReceived'] > 0 else '∞', axis=1
-    )
+    # Berechnung des Spenden-Verhältnisses mit Fehlerbehandlung
+    def calculate_donation_ratio(row):
+        donations = row['donations']
+        donations_received = row['donationsReceived']
+        if donations > 0 and donations_received > 0:
+            return f"{donations / donations_received:.2f}"
+        elif donations > 0 and donations_received == 0:
+            return "Keine erhalten"
+        elif donations == 0 and donations_received > 0:
+            return "Keine gegeben"
+        else:
+            return "Keine gegeben & erhalten"
+
+    df['Spenden_Verhältnis'] = df.apply(calculate_donation_ratio, axis=1)
 
     # Spieler nach Aktivität sortieren und eine eindeutige ID zuweisen
     df = df.sort_values(by='Aktivität', ascending=False).reset_index(drop=True)
@@ -131,11 +147,6 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
             "</tr>"
         )
         for index, row in dataframe.iterrows():
-            # Formatierung des Verhältnisses
-            if row['Spenden_Verhältnis'] == '∞':
-                ratio = '∞'
-            else:
-                ratio = f"{row['Spenden_Verhältnis']:.2f}"
             table_html += (
                 f"<tr>"
                 f"<td>{index + 1}</td>"
@@ -145,7 +156,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
                 f"<td>{row['donations']}</td>"
                 f"<td>{row['donationsReceived']}</td>"
                 f"<td>{row['attackWins']}</td>"
-                f"<td>{ratio}</td>"
+                f"<td>{row['Spenden_Verhältnis']}</td>"
                 f"</tr>"
             )
         table_html += "</table>"
@@ -230,7 +241,13 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         "</table>"
 
         "<h3>Spenden Verhältnis:</h3>"
-        "<p>Das Spenden-Verhältnis berechnet das Verhältnis von <strong>Spenden Gegeben</strong> zu <strong>Spenden Erhalten</strong>. Ein höheres Verhältnis deutet darauf hin, dass ein Spieler mehr Spenden gibt als erhält, was auf eine unterstützende Rolle im Clan hinweist.</p>"
+        "<p>Das Spenden-Verhältnis berechnet das Verhältnis von <strong>Spenden Gegeben</strong> zu <strong>Spenden Erhalten</strong>. Ein höheres Verhältnis deutet darauf hin, dass ein Spieler mehr Spenden gibt als erhält, was auf eine unterstützende Rolle im Clan hinweist. Falls ein Spieler keine Spenden gegeben oder erhalten hat, wird dies entsprechend angezeigt:</p>"
+        "<ul>"
+        "<li><strong>Keine erhalten:</strong> Der Spieler gibt Spenden, erhält jedoch keine.</li>"
+        "<li><strong>Keine gegeben:</strong> Der Spieler erhält Spenden, gibt jedoch keine.</li>"
+        "<li><strong>Keine gegeben & erhalten:</strong> Der Spieler gibt und erhält keine Spenden.</li>"
+        "<li><strong>Verhältniswert:</strong> Das Verhältnis von Spenden Gegeben zu Spenden Erhalten.</li>"
+        "</ul>"
 
         "<h3>Interpretation:</h3>"
         "<p>Dieser Aktivitätsindex kombiniert verschiedene Faktoren, die die Aktivität und Beiträge eines Spielers innerhalb des Clans widerspiegeln:</p>"
