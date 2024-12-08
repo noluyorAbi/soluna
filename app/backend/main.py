@@ -9,6 +9,7 @@ import plotly.express as px
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+import html  # Für HTML-Escaping
 
 # Schriftart anpassen, um fehlende Glyphen zu vermeiden
 plt.rcParams['font.family'] = 'DejaVu Sans'  # 'DejaVu Sans' ist standardmäßig in matplotlib enthalten
@@ -80,6 +81,71 @@ async def get_player_data(player_tag, coc_client):
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Ein Fehler ist aufgetreten beim Abrufen von Spieler {player_tag}: {err}")
     return None
 
+def generate_html_table(dataframe, title, table_id):
+    table_html = f"<h3>{html.escape(title)}</h3><table id='{html.escape(table_id)}'>"
+    # Kopfzeile mit zusätzlichen Spalten
+    table_html += (
+        "<thead>"
+        "<tr>"
+        "<th>Rang</th>"
+        "<th>Name</th>"
+        "<th>Aktivität</th>"
+        "<th>Trophäen</th>"
+        "<th>Spenden Gegeben</th>"
+        "<th>Spenden Erhalten</th>"
+        "<th>Gewonnene Angriffe</th>"
+        "<th>Spenden Verhältnis</th>"
+        "</tr>"
+        "</thead><tbody>"
+    )
+    for index, row in dataframe.iterrows():
+        table_html += (
+            "<tr>"
+            f"<td>{index + 1}</td>"
+            f"<td>{html.escape(str(row['name']))}</td>"
+            f"<td>{row['Aktivität']:.2f}</td>"
+            f"<td>{row['trophies']}</td>"
+            f"<td>{row['donations']}</td>"
+            f"<td>{row['donationsReceived']}</td>"
+            f"<td>{row['attackWins']}</td>"
+            f"<td>{html.escape(row['Spenden_Verhältnis'])}</td>"
+            "</tr>"
+        )
+    table_html += "</tbody></table>"
+    return table_html
+
+def generate_full_html_table(dataframe, title, table_id):
+    table_html = f"<h3>{html.escape(title)}</h3><table id='{html.escape(table_id)}'>"
+    table_html += (
+        "<thead>"
+        "<tr>"
+        "<th>Rang</th>"
+        "<th>Name</th>"
+        "<th>Aktivität</th>"
+        "<th>Trophäen</th>"
+        "<th>Spenden Gegeben</th>"
+        "<th>Spenden Erhalten</th>"
+        "<th>Gewonnene Angriffe</th>"
+        "<th>Spenden Verhältnis</th>"
+        "</tr>"
+        "</thead><tbody>"
+    )
+    for index, row in dataframe.iterrows():
+        table_html += (
+            "<tr>"
+            f"<td>{index + 1}</td>"
+            f"<td>{html.escape(str(row['name']))}</td>"
+            f"<td>{row['Aktivität']:.2f}</td>"
+            f"<td>{row['trophies']}</td>"
+            f"<td>{row['donations']}</td>"
+            f"<td>{row['donationsReceived']}</td>"
+            f"<td>{row['attackWins']}</td>"
+            f"<td>{html.escape(row['Spenden_Verhältnis'])}</td>"
+            "</tr>"
+        )
+    table_html += "</tbody></table>"
+    return table_html
+
 def create_interactive_activity_plot(members_data, donation_weight=1.0, donation_received_weight=0.5,
                                      attack_win_weight=1.5, trophy_scale=1000.0, attack_base_weight=1.0):
     """
@@ -107,7 +173,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
                       (df['donationsReceived'] * donation_received_weight) + \
                       (df['attackWins'] * df['attackWinWeight'])
 
-    # Berechnung des Spenden-Verhältnisses mit Fehlerbehandlung
+    # Berechnung des Spenden-Verhältnisses mit spezifischer Fehlerbehandlung
     def calculate_donation_ratio(row):
         donations = row['donations']
         donations_received = row['donationsReceived']
@@ -131,39 +197,15 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
     bottom_5 = df.tail(5)
 
     # Erstellung der HTML-Tabellen für Top 5 und Bottom 5
-    def generate_html_table(dataframe, title):
-        table_html = f"<h3>{title}</h3><table>"
-        # Kopfzeile mit zusätzlichen Spalten
-        table_html += (
-            "<tr>"
-            "<th>Rang</th>"
-            "<th>Name</th>"
-            "<th>Aktivität</th>"
-            "<th>Trophäen</th>"
-            "<th>Spenden Gegeben</th>"
-            "<th>Spenden Erhalten</th>"
-            "<th>Gewonnene Angriffe</th>"
-            "<th>Spenden Verhältnis</th>"
-            "</tr>"
-        )
-        for index, row in dataframe.iterrows():
-            table_html += (
-                f"<tr>"
-                f"<td>{index + 1}</td>"
-                f"<td>{row['name']}</td>"
-                f"<td>{row['Aktivität']:.2f}</td>"
-                f"<td>{row['trophies']}</td>"
-                f"<td>{row['donations']}</td>"
-                f"<td>{row['donationsReceived']}</td>"
-                f"<td>{row['attackWins']}</td>"
-                f"<td>{row['Spenden_Verhältnis']}</td>"
-                f"</tr>"
-            )
-        table_html += "</table>"
-        return table_html
+    top_5_html = generate_html_table(top_5, "Top 5 Aktive Clan-Mitglieder", "top5_table")
+    bottom_5_html = generate_html_table(bottom_5, "Bottom 5 Aktive Clan-Mitglieder", "bottom5_table")
 
-    top_5_html = generate_html_table(top_5, "Top 5 Aktive Clan-Mitglieder")
-    bottom_5_html = generate_html_table(bottom_5, "Bottom 5 Aktive Clan-Mitglieder")
+    # Erstellung der Haupttabelle mit allen Clan-Mitgliedern
+    full_table_html = generate_full_html_table(df, "Alle Clan-Mitglieder", "full_table")
+
+    # Berechnung von Durchschnitt und Median der Aktivität
+    mean_activity = df['Aktivität'].mean()
+    median_activity = df['Aktivität'].median()
 
     # Quantile berechnen (z.B. 25%, 50%, 75%)
     quantiles = df['Aktivität'].quantile([0.25, 0.5, 0.75]).tolist()
@@ -188,14 +230,14 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         'Sehr hoch': 'blue'  # Optional, falls vorhanden
     }
 
-    # Interaktiven Plot erstellen
+    # Interaktiven Scatter Plot erstellen
     fig = px.scatter(
         df,
         x='Spieler_ID',
         y='Aktivität',
         color='Quantil',
         color_discrete_map=quantil_colors,
-        hover_data=['name', 'trophies', 'donations', 'donationsReceived', 'attackWins', 'Spenden_Verhältnis'],
+        custom_data=['name', 'trophies', 'donations', 'donationsReceived', 'attackWins', 'Spenden_Verhältnis'],
         labels={
             'Spieler_ID': 'Spieler ID',
             'Aktivität': 'Aktivität'
@@ -203,14 +245,85 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         title='Clan-Mitglieder Aktivitäts-Plot'
     )
 
+    # Anpassung des Hover-Templates, damit der Name ganz oben steht
+    fig.update_traces(
+        hovertemplate=(
+            "<b>%{customdata[0]}</b><br>"
+            "Trophäen: %{customdata[1]}<br>"
+            "Spenden Gegeben: %{customdata[2]}<br>"
+            "Spenden Erhalten: %{customdata[3]}<br>"
+            "Gewonnene Angriffe: %{customdata[4]}<br>"
+            "Spenden Verhältnis: %{customdata[5]}<br>"
+            "<extra></extra>"
+        )
+    )
+
+    # Durchschnittliche Aktivität als separater Trace hinzufügen
+    fig.add_trace(
+        px.line(
+            x=[0, df['Spieler_ID'].max() + 1],
+            y=[mean_activity, mean_activity],
+            labels={'x': 'Spieler ID', 'y': 'Aktivität'},
+            title='Durchschnittliche Aktivität'
+        ).update_traces(
+            name='Durchschnittliche Aktivität',
+            line=dict(color="RoyalBlue", width=2, dash="dash"),
+            hoverinfo='skip'
+        ).data[0]
+    )
+
+    # Median Aktivität als separater Trace hinzufügen
+    fig.add_trace(
+        px.line(
+            x=[0, df['Spieler_ID'].max() + 1],
+            y=[median_activity, median_activity],
+            labels={'x': 'Spieler ID', 'y': 'Aktivität'},
+            title='Median Aktivität'
+        ).update_traces(
+            name='Median Aktivität',
+            line=dict(color="Green", width=2, dash="dot"),
+            hoverinfo='skip'
+        ).data[0]
+    )
+
+    # Hinzufügen von Annotationen für die Linien
+    fig.add_annotation(
+        x=df['Spieler_ID'].max(),
+        y=mean_activity,
+        xref="x",
+        yref="y",
+        text="Durchschnittliche Aktivität",
+        showarrow=True,
+        arrowhead=7,
+        ax=-40,
+        ay=0,
+        bgcolor="RoyalBlue",
+        font=dict(color="white")
+    )
+
+    fig.add_annotation(
+        x=df['Spieler_ID'].max(),
+        y=median_activity,
+        xref="x",
+        yref="y",
+        text="Median Aktivität",
+        showarrow=True,
+        arrowhead=7,
+        ax=-40,
+        ay=0,
+        bgcolor="Green",
+        font=dict(color="white")
+    )
+
     # Plot als HTML-String erhalten, Höhe auf 600px festlegen
     plot_div = fig.to_html(include_plotlyjs='cdn', full_html=False, default_height='600px')
 
-    # Erstellung der HTML-Tabellen für Top 5 und Bottom 5
-    top_bottom_html = f"""
+    # Gesamte HTML-Tabellen (Top 5, Bottom 5 und Haupttabelle)
+    full_tables_html = f"""
     <div>
         {top_5_html}
         {bottom_5_html}
+        {full_table_html}
     </div>
     """
 
@@ -235,9 +348,9 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         "<h3>Gewichtungsfaktoren:</h3>"
         "<table>"
         "<tr><th>Faktor</th><th>Wert</th></tr>"
-        f"<tr><td>Spenden Gegeben</td><td>{donation_weight}</td></tr>"
-        f"<tr><td>Spenden Erhalten</td><td>{donation_received_weight}</td></tr>"
-        f"<tr><td>Gewonnene Angriffe</td><td>{attack_base_weight} + (Trophäen / {trophy_scale})</td></tr>"
+        f"<tr><td>Spenden Gegeben</td><td>{DONATION_WEIGHT}</td></tr>"
+        f"<tr><td>Spenden Erhalten</td><td>{DONATION_RECEIVED_WEIGHT}</td></tr>"
+        f"<tr><td>Gewonnene Angriffe</td><td>{ATTACK_BASE_WEIGHT} + (Trophäen / {TROPHY_SCALE})</td></tr>"
         "</table>"
 
         "<h3>Spenden Verhältnis:</h3>"
@@ -248,6 +361,9 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         "<li><strong>Keine gegeben & erhalten:</strong> Der Spieler gibt und erhält keine Spenden.</li>"
         "<li><strong>Verhältniswert:</strong> Das Verhältnis von Spenden Gegeben zu Spenden Erhalten.</li>"
         "</ul>"
+
+        "<h3>Durchschnittliche und Median Aktivität:</h3>"
+        "<p>Im Plot sind die durchschnittliche Aktivität (blau gestrichelt) und der Median der Aktivität (grün punktiert) des Clans als horizontale Linien gekennzeichnet. Diese dienen als Referenzpunkte, um die Position der einzelnen Mitglieder im Vergleich zum Durchschnitt und Median des Clans zu sehen.</p>"
 
         "<h3>Interpretation:</h3>"
         "<p>Dieser Aktivitätsindex kombiniert verschiedene Faktoren, die die Aktivität und Beiträge eines Spielers innerhalb des Clans widerspiegeln:</p>"
@@ -268,23 +384,23 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         "</ul>"
         "<p>Die Berechnung der Aktivität wäre dann:</p>"
         "<p>"
-        f"Aktivität = (120 × {donation_weight}) + "
-        f"(80 × {donation_received_weight}) + "
-        f"(150 × ({attack_base_weight} + 2000 / {trophy_scale}))"
+        f"Aktivität = (120 × {DONATION_WEIGHT}) + "
+        f"(80 × {DONATION_RECEIVED_WEIGHT}) + "
+        f"(150 × ({ATTACK_BASE_WEIGHT} + 2000 / {TROPHY_SCALE}))"
         "</p>"
         "<h4>Schrittweise Berechnung:</h4>"
         "<ol>"
-        f"<li>Spenden Gegeben Beitrag: 120 × {donation_weight} = {120 * donation_weight}</li>"
-        f"<li>Spenden Erhalten Beitrag: 80 × {donation_received_weight} = {80 * donation_received_weight}</li>"
-        f"<li>Gewonnene Angriffe Gewichtung: {attack_base_weight} + 2000 / {trophy_scale} = {attack_base_weight + 2000 / trophy_scale}</li>"
-        f"<li>Gewonnene Angriffe Beitrag: 150 × ({attack_base_weight + 2000 / trophy_scale}) = {150 * (attack_base_weight + 2000 / trophy_scale)}</li>"
+        f"<li>Spenden Gegeben Beitrag: 120 × {DONATION_WEIGHT} = {120 * DONATION_WEIGHT}</li>"
+        f"<li>Spenden Erhalten Beitrag: 80 × {DONATION_RECEIVED_WEIGHT} = {80 * DONATION_RECEIVED_WEIGHT}</li>"
+        f"<li>Gewonnene Angriffe Gewichtung: {ATTACK_BASE_WEIGHT} + 2000 / {TROPHY_SCALE} = {ATTACK_BASE_WEIGHT + 2000 / TROPHY_SCALE}</li>"
+        f"<li>Gewonnene Angriffe Beitrag: 150 × ({ATTACK_BASE_WEIGHT + 2000 / TROPHY_SCALE}) = {150 * (ATTACK_BASE_WEIGHT + 2000 / TROPHY_SCALE)}</li>"
         f"<li>Spenden Verhältnis: 120 / 80 = 1.50</li>"
         "<li>Gesamtaktivität: Summe aller Beiträge</li>"
         "</ol>"
         "<p>Dies ergibt den endgültigen Aktivitätswert, der zum Vergleich der Clan-Mitglieder verwendet werden kann.</p>"
     )
 
-    # Gesamtes HTML erstellen mit Top 5 und Bottom 5 vor dem Erklärungstext
+    # Gesamtes HTML erstellen mit allen Tabellen vor dem Erklärungstext
     full_html = f"""
     <!DOCTYPE html>
     <html>
@@ -300,11 +416,28 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
     </head>
     <body>
         {plot_div}
-        {top_bottom_html}
+        {full_tables_html}
         {explanation_text}
         <script>
             $(document).ready(function() {{
-                $('table').DataTable();
+                $('#top5_table').DataTable({{
+                    "pageLength": 5,
+                    "lengthMenu": [5, 10, 25, 50],
+                    "paging": false,  // Deaktiviert die Paginierung für Top 5 und Bottom 5
+                    "searching": false  // Deaktiviert die Suche für Top 5 und Bottom 5
+                }});
+                $('#bottom5_table').DataTable({{
+                    "pageLength": 5,
+                    "lengthMenu": [5, 10, 25, 50],
+                    "paging": false,
+                    "searching": false
+                }});
+                $('#full_table').DataTable({{
+                    "pageLength": 5,
+                    "lengthMenu": [5, 10, 25, 50],
+                    "paging": true,
+                    "searching": true
+                }});
             }});
         </script>
     </body>
