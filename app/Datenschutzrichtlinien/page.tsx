@@ -34,9 +34,9 @@ export default function Datenschutzrichtlinien() {
 
       {/* Hauptinhalt */}
       <main className="flex-grow container mx-auto px-4 py-12 text-gray-800 mt-10">
-        <h2 className="text-4xl font-bold text-blue-600 mb-8 text-center">
-          Datenschutzrichtlinien
-        </h2>
+        <h1 className="text-5xl  my-64 text-center rounded-md bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 text-blue-600 p-6">
+          Datenschutzrichtlinien{" "}
+        </h1>
         <section className="mb-8">
           <p className="text-lg mb-4">
             Willkommen bei den Datenschutzrichtlinien des{" "}

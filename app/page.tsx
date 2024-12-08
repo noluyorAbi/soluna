@@ -30,18 +30,26 @@ export default function Home() {
         <h1 className="text-2xl font-bold text-blue-600">SOLUNA Dashboard</h1>
         <nav>
           <ul className="flex space-x-6">
+            {/*             
             <li>
-              <a href="#features" className="text-gray-600 hover:text-blue-600">
+              <a href="/Features" className="text-gray-600 hover:text-blue-600">
                 Features
               </a>
             </li>
+ */}
             <li>
-              <a href="#about" className="text-gray-600 hover:text-blue-600">
+              <a
+                href="/ueber_uns"
+                className="text-gray-600 hover:text-blue-600"
+              >
                 Über Uns
               </a>
             </li>
             <li>
-              <a href="#contact" className="text-gray-600 hover:text-blue-600">
+              <a
+                href="https://discord.gg/G2Br635S4B"
+                className="text-gray-600 hover:text-blue-600"
+              >
                 Kontakt
               </a>
             </li>
@@ -60,9 +68,9 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-lg text-gray-700 mb-8 max-w-2xl">
-              Verfolgen Sie die Aktivität der SOLUNA Clan-Mitglieder in Echtzeit.
-              Analysieren Sie Spenden, erhaltene Spenden und gewonnene Angriffe mit
-              interaktiven Diagrammen.
+              Verfolgen Sie die Aktivität der SOLUNA Clan-Mitglieder in
+              Echtzeit. Analysieren Sie Spenden, erhaltene Spenden und gewonnene
+              Angriffe mit interaktiven Diagrammen.
             </p>
             <button
               onClick={handleButtonClick}
@@ -72,15 +80,23 @@ export default function Home() {
             </button>
           </>
         ) : (
+            
           <div className="flex flex-col items-center justify-center">
             <h2 className="text-5xl font-extrabold text-blue-600 mb-6 leading-tight">
               SOLUNA - Clan Daten laden
             </h2>
             <p className="text-lg text-gray-700 mb-8 max-w-2xl">
               Bitte warten Sie, während die Clan-Daten verarbeitet werden.
-            </p>
+              </p>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce"></div>
+          <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce delay-75"></div>
+          <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce delay-150"></div>
+                </div>
             <div className="w-12 h-12 border-4 border-blue-600 border-dashed rounded-full animate-spin"></div>
-          </div>
+            </div>
+            
+            
         )}
       </main>
 
