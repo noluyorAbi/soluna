@@ -1,0 +1,8 @@
+fastapi
+mangum
+matplotlib
+pandas
+coc
+plotly
+python-dotenv
+uvicorn

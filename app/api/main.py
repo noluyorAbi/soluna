@@ -10,14 +10,15 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import html  # Für HTML-Escaping
+from mangum import Mangum  # Importiere Mangum für die Integration mit Vercel
 
 # Schriftart anpassen, um fehlende Glyphen zu vermeiden
 plt.rcParams['font.family'] = 'DejaVu Sans'  # 'DejaVu Sans' ist standardmäßig in matplotlib enthalten
 
-# dotenv laden
+# dotenv laden (nur lokal nützlich, Vercel verwendet Environment Variables)
 load_dotenv()
 
-# Clash of Clans API E-Mail und Passwort aus .env laden
+# Clash of Clans API E-Mail und Passwort aus Environment Variables laden
 COC_EMAIL = os.getenv('COC_EMAIL')
 COC_PASSWORD = os.getenv('COC_PASSWORD')
 CLAN_TAG = '#2LUVL2QGL'  # Ersetzen Sie dies mit Ihrem Clan-Tag
@@ -34,7 +35,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",  # Port Ihres Next.js-Entwicklungsservers
-    # Fügen Sie weitere Ursprünge hinzu, wenn nötig
+    "https://soluna-nine.vercel.app",# Fügen Sie weitere Ursprünge hinzu, wenn nötig
 ]
 
 # CORS erlauben
@@ -84,54 +85,6 @@ async def get_player_data(player_tag, coc_client):
 def generate_html_table(dataframe, title, table_id):
     table_html = f"<h3>{html.escape(title)}</h3><table id='{html.escape(table_id)}'>"
     # Kopfzeile mit zusätzlichen Spalten
-    table_html += (
-        "<thead>"
-        "<tr>"
-        "<th>Rang</th>"
-        "<th>Name</th>"
-        "<th>Aktivität</th>"
-        "<th>Trophäen</th>"
-        "<th>Spenden Gegeben</th>"
-        "<th>Spenden Erhalten</th>"
-        "<th>Gewonnene Angriffe</th>"
-        "<th>Spenden Verhältnis</th>"
-        "</tr>"
-        "</thead><tbody>"
-    )
-    for index, row in dataframe.iterrows():
-        spenden_verhältnis = row['Spenden_Verhältnis']
-        # Versuchen, den Spenden-Verhältnis-Wert in eine Zahl umzuwandeln
-        try:
-            ratio = float(spenden_verhältnis)
-            if ratio > 1:
-                color = "green"
-            elif ratio < 1:
-                color = "red"
-            else:
-                color = "black"  # Falls das Verhältnis genau 1 ist
-            ratio_html = f"<td style='color: {color};'>{html.escape(str(spenden_verhältnis))}</td>"
-        except ValueError:
-            # Falls der Wert nicht numerisch ist, keine Farbe anwenden
-            ratio_html = f"<td>{html.escape(str(spenden_verhältnis))}</td>"
-
-        table_html += (
-            "<tr>"
-            f"<td>{index + 1}</td>"
-            f"<td>{html.escape(str(row['name']))}</td>"
-            f"<td>{row['Aktivität']:.2f}</td>"
-            f"<td>{row['trophies']}</td>"
-            f"<td>{row['donations']}</td>"
-            f"<td>{row['donationsReceived']}</td>"
-            f"<td>{row['attackWins']}</td>"
-            f"{ratio_html}"
-            "</tr>"
-        )
-    table_html += "</tbody></table>"
-    return table_html
-
-
-def generate_full_html_table(dataframe, title, table_id):
-    table_html = f"<h3>{html.escape(title)}</h3><table id='{html.escape(table_id)}'>"
     table_html += (
         "<thead>"
         "<tr>"
@@ -537,7 +490,7 @@ async def clan_activity():
     """
     # Überprüfen, ob E-Mail und Passwort gesetzt sind
     if not COC_EMAIL or not COC_PASSWORD:
-        return HTMLResponse(content="COC_EMAIL oder COC_PASSWORD ist nicht gesetzt. Bitte überprüfen Sie Ihre .env-Datei.", status_code=500)
+        return HTMLResponse(content="COC_EMAIL oder COC_PASSWORD ist nicht gesetzt. Bitte überprüfen Sie Ihre Environment Variables.", status_code=500)
 
     # coc.py Client initialisieren
     async with coc.Client() as coc_client:
@@ -583,6 +536,5 @@ async def clan_activity():
 
         return HTMLResponse(content=html_content, status_code=200)
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+# Mangum Handler hinzufügen
+handler = Mangum(app)
