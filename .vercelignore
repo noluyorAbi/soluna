@@ -1,0 +1,21 @@
+# Ignoriere das .git-Verzeichnis
+.git
+
+# Ignoriere die Next.js Build-Dateien
+.next
+out
+
+# Ignoriere node_modules für die Serverless Function
+node_modules
+
+# Ignoriere Umgebungsdateien (sicherstellen, dass sie in Vercel als Umgebungsvariablen gesetzt sind)
+.env
+.env.local
+.env.*.local
+
+# Ignoriere andere unnötige Dateien und Verzeichnisse
+*.log
+*.pyc
+__pycache__
+*.zip
+*.tar.gz
