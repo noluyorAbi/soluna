@@ -36,6 +36,7 @@ app = FastAPI()
 origins = [
     "http://localhost:3000",  # Port Ihres Next.js-Entwicklungsservers
     "https://soluna-nine.vercel.app",# Fügen Sie weitere Ursprünge hinzu, wenn nötig
+    "https://soluna-production.up.railway.app", # Produktionsfrontend
 ]
 
 # CORS erlauben
