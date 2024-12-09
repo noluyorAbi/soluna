@@ -19,3 +19,5 @@ node_modules
 __pycache__
 *.zip
 *.tar.gz
+venv
+/node_modules
