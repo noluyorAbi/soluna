@@ -471,7 +471,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
                     var url = window.URL.createObjectURL(blob);
                     var a = document.createElement('a');
                     a.href = url;
-                    a.download = 'clan_activity.html';
+                    a.download = 'clan_activity_soluna.html';
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
@@ -607,7 +607,7 @@ async def clan_activity(download: bool = Query(False, description="Setze auf tru
             buffer,
             media_type="text/html",
             headers={
-                "Content-Disposition": "attachment; filename=clan_activity.html"
+                "Content-Disposition": "attachment; filename=clan_activity_soluna.html"
             }
         )
     else:
