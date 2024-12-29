@@ -270,7 +270,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         y='Aktivität',
         color='Quantil',
         color_discrete_map=quantil_colors,
-        custom_data=['name', 'trophies', 'donations', 'donationsReceived', 'attackWins', 'Spenden_Verhältnis'],
+        custom_data=['name', 'trophies', 'donations', 'donationsReceived', 'attackWins', 'Spenden_Verhältnis', 'Aktivität'],
         labels={
             'Spieler_ID': 'Spieler ID',
             'Aktivität': 'Aktivität'
@@ -282,6 +282,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
     fig.update_traces(
         hovertemplate=(
             "<b>%{customdata[0]}</b><br>"
+            "Aktivität: %{customdata[6]:.2f}<br>"
             "Trophäen: %{customdata[1]}<br>"
             "Spenden Gegeben: %{customdata[2]}<br>"
             "Spenden Erhalten: %{customdata[3]}<br>"
@@ -454,14 +455,13 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
             border-radius: 5px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease, background 0.2s ease;
-        " 
-        onmouseover="this.style.background='linear-gradient(to right, #1E5A99, #0D3E6D)'; this.style.transform='scale(1.05)';" 
+        "
+        onmouseover="this.style.background='linear-gradient(to right, #1E5A99, #0D3E6D)'; this.style.transform='scale(1.05)';"
         onmouseout="this.style.background='linear-gradient(to right, #2E75B6, #1E5A99)'; this.style.transform='scale(1)';">
             Zurück zur Startseite
         </a>
     </div>
     """
-
 
     # Download-Schaltfläche hinzufügen mit Ladeanzeige
     download_button_html = """
