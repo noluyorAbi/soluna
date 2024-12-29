@@ -109,7 +109,7 @@ export default function Home() {
           </p>
           <p className="mt-2">
             <a
-              href="/Datenschutzrichtlinien"
+              href="/datenschutzrichtlinien"
               className="text-blue-400 hover:text-white"
               rel="noopener noreferrer"
             >
