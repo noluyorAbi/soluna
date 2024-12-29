@@ -441,11 +441,10 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
     # HTML für den Timestamp erstellen
     timestamp_html = f"<hr><p><em>Daten vom: {current_time}</em></p>"
 
-    # Download-Schaltfläche hinzufügen als 'a' Tag, der wie ein Button aussieht
+    # Download-Schaltfläche hinzufügen mit Ladeanzeige
     download_button_html = """
     <div style="margin-top: 20px;">
-        <a href="/clan-activity?download=true" download="clan_activity.html" style="
-            display: inline-block;
+        <button id="downloadBtn" onclick="downloadHTML()" style="
             background-color: #2E75B6;
             color: white;
             padding: 10px 20px;
@@ -453,10 +452,41 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            text-decoration: none;
-            text-align: center;
-        ">Download HTML</a>
+        ">Download HTML</button>
     </div>
+    <script>
+        function downloadHTML() {
+            var btn = document.getElementById('downloadBtn');
+            btn.disabled = true;
+            btn.innerText = 'Lädt...';
+
+            fetch('/clan-activity?download=true')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Netzwerkantwort war nicht ok');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'clan_activity.html';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    btn.disabled = false;
+                    btn.innerText = 'Download HTML';
+                })
+                .catch(error => {
+                    console.error('Es gab ein Problem mit dem Download:', error);
+                    alert('Download fehlgeschlagen. Bitte versuche es erneut.');
+                    btn.disabled = false;
+                    btn.innerText = 'Download HTML';
+                });
+        }
+    </script>
     """
 
     # Gesamtes HTML erstellen mit allen Tabellen, Erklärungstext, Download-Schaltfläche und dem Timestamp

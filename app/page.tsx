@@ -80,23 +80,22 @@ export default function Home() {
             </button>
           </>
         ) : (
-            
           <div className="flex flex-col items-center justify-center">
             <h2 className="text-5xl font-extrabold text-blue-600 mb-6 leading-tight">
               SOLUNA - Clan Daten laden
             </h2>
             <p className="text-lg text-gray-700 mb-8 max-w-2xl">
               Bitte warten Sie, während die Clan-Daten verarbeitet werden.
-              </p>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce"></div>
-          <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce delay-75"></div>
-          <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce delay-150"></div>
-                </div>
+            </p>
+            {/*               
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce"></div>
+              <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce delay-75"></div>
+              <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce delay-150"></div>
+              </div>
+               */}
             <div className="w-12 h-12 border-4 border-blue-600 border-dashed rounded-full animate-spin"></div>
-            </div>
-            
-            
+          </div>
         )}
       </main>
 
