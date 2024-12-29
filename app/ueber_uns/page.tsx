@@ -176,7 +176,7 @@ export default function Features() {
                 x2="62.929"
                 y2="37.071"
                 stroke="#3498db"
-                stroke-width="3"
+                strokeWidth="3"
               />
               <line
                 x1="35.355"
@@ -184,7 +184,7 @@ export default function Features() {
                 x2="44.645"
                 y2="60.355"
                 stroke="#3498db"
-                stroke-width="3"
+                strokeWidth="3"
               />
               <line
                 x1="64.645"
@@ -192,7 +192,7 @@ export default function Features() {
                 x2="55.355"
                 y2="60.355"
                 stroke="#3498db"
-                stroke-width="3"
+                strokeWidth="3"
               />
             </svg>
           </div>
