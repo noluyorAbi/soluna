@@ -1,0 +1,60 @@
+# Stage 1: Build the Next.js application
+FROM node:18-alpine AS builder
+
+# Install notwendige Pakete und Bun
+RUN apk add --no-cache curl bash \
+    && curl -fsSL https://bun.sh/install | bash
+
+# Setzen der Umgebungsvariablen für Bun
+ENV BUN_INSTALL="/root/.bun"
+ENV PATH="$BUN_INSTALL/bin:$PATH"
+
+# Überprüfen der Bun-Installation
+RUN bun --version
+
+# Arbeitsverzeichnis festlegen
+WORKDIR /app
+
+# Kopieren von package.json und bun.lockb aus dem Root-Verzeichnis
+COPY package.json bun.lockb ./
+
+# Installieren der Abhängigkeiten mit Bun
+RUN bun install
+
+# Kopieren aller notwendigen Dateien und Verzeichnisse
+COPY . .
+
+# Bauen der Next.js-Anwendung
+RUN bun run build
+
+# Stage 2: Serve the Next.js application
+FROM node:18-alpine
+
+# Install notwendige Pakete und Bun
+RUN apk add --no-cache curl bash \
+    && curl -fsSL https://bun.sh/install | bash
+
+# Setzen der Umgebungsvariablen für Bun
+ENV BUN_INSTALL="/root/.bun"
+ENV PATH="$BUN_INSTALL/bin:$PATH"
+
+# Überprüfen der Bun-Installation
+RUN bun --version
+
+# Arbeitsverzeichnis festlegen
+WORKDIR /app
+
+# Kopieren der notwendigen Dateien aus der Builder-Stage
+COPY --from=builder /app/package.json /app/bun.lockb ./
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/next.config.ts ./next.config.ts
+COPY --from=builder /app/node_modules ./node_modules
+
+# Installieren der Produktionsabhängigkeiten mit Bun
+RUN bun install --production
+
+# Port freigeben, auf dem die Next.js-Anwendung läuft
+EXPOSE 3000
+
+# Starten der Next.js-Anwendung
+CMD ["bun", "run", "start"]

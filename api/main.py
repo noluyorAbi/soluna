@@ -375,7 +375,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         "th, td { border: 1px solid #dddddd; text-align: left; padding: 8px; }"
         "th { background-color: #2E75B6; color: white; }"
         "</style>"
-        "<h2>Erklärung zur Aktivitätsberechnung</h2>"
+        "<hr><h2>Erklärung zur Aktivitätsberechnung</h2>"
         "<p>Die Aktivität jedes Clan-Mitglieds wird mit der folgenden Formel berechnet:</p>"
         "<p><strong>Aktivität = (Spenden Gegeben × Gewichtung) + "
         "(Spenden Erhalten × Gewichtung) + "
@@ -410,6 +410,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         "</ul>"
         "<p>Die Trophäenanzahl dient als Indikator für das Spielniveau. Höhere Trophäen bedeuten, dass der Spieler auf einem höheren Wettbewerbsniveau spielt, was bei der Berechnung der Aktivität berücksichtigt wird.</p>"
 
+        "<hr>"
         "<h3>Beispielberechnung:</h3>"
         "<p>Angenommen, ein Spieler hat folgende Statistiken:</p>"
         "<ul>"
@@ -436,7 +437,12 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         "<p>Dies ergibt den endgültigen Aktivitätswert, der zum Vergleich der Clan-Mitglieder verwendet werden kann.</p>"
     )
 
-    # Gesamtes HTML erstellen mit allen Tabellen vor dem Erklärungstext
+    # Erfasse den aktuellen Zeitpunkt
+    current_time = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+    # HTML für den Timestamp erstellen
+    timestamp_html = f"<hr><p><em>Daten vom: {current_time}</em></p>"
+
+    # Gesamtes HTML erstellen mit allen Tabellen vor dem Erklärungstext und dem Timestamp
     full_html = f"""
     <!DOCTYPE html>
     <html>
@@ -454,6 +460,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         {plot_div}
         {full_tables_html}
         {explanation_text}
+        {timestamp_html}
         <script>
             $(document).ready(function() {{
                 $('#top5_table').DataTable({{

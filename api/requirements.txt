@@ -2,7 +2,8 @@ fastapi
 mangum
 matplotlib
 pandas
-coc
+coc.py>=3.7.0
 plotly
 python-dotenv
 uvicorn
+html5lib
