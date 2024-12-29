@@ -441,6 +441,28 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
     # HTML für den Timestamp erstellen
     timestamp_html = f"<hr><p><em>Daten vom: {current_time}</em></p>"
 
+    return_home_button_html = """
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="/" style="
+            display: inline-block;
+            background: linear-gradient(to right, #2E75B6, #1E5A99);
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, background 0.2s ease;
+        " 
+        onmouseover="this.style.background='linear-gradient(to right, #1E5A99, #0D3E6D)'; this.style.transform='scale(1.05)';" 
+        onmouseout="this.style.background='linear-gradient(to right, #2E75B6, #1E5A99)'; this.style.transform='scale(1)';">
+            Zurück zur Startseite
+        </a>
+    </div>
+    """
+
+
     # Download-Schaltfläche hinzufügen mit Ladeanzeige
     download_button_html = """
     <div style="margin-top: 20px;">
@@ -504,6 +526,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.js"></script>
     </head>
     <body>
+        {return_home_button_html}
         {plot_div}
         {full_tables_html}
         {explanation_text}
