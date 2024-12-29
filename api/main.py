@@ -6,11 +6,12 @@ import pandas as pd
 import coc
 import asyncio
 import plotly.express as px
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Response, Query
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import html  # Für HTML-Escaping
 from mangum import Mangum  # Importiere Mangum für die Integration mit Vercel
+from io import StringIO
 
 # Schriftart anpassen, um fehlende Glyphen zu vermeiden
 plt.rcParams['font.family'] = 'DejaVu Sans'  # 'DejaVu Sans' ist standardmäßig in matplotlib enthalten
@@ -35,8 +36,8 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",  # Port Ihres Next.js-Entwicklungsservers
-    "https://soluna-nine.vercel.app",# Fügen Sie weitere Ursprünge hinzu, wenn nötig
-    "https://soluna-production.up.railway.app", # Produktionsfrontend
+    "https://soluna-nine.vercel.app",  # Fügen Sie weitere Ursprünge hinzu, wenn nötig
+    "https://soluna-production.up.railway.app",  # Produktionsfrontend
 ]
 
 # CORS erlauben
@@ -131,7 +132,6 @@ def generate_html_table(dataframe, title, table_id):
     table_html += "</tbody></table>"
     return table_html
 
-
 def generate_full_html_table(dataframe, title, table_id):
     table_html = f"<h3>{html.escape(title)}</h3><table id='{html.escape(table_id)}'>"
     table_html += (
@@ -178,7 +178,6 @@ def generate_full_html_table(dataframe, title, table_id):
         )
     table_html += "</tbody></table>"
     return table_html
-
 
 def create_interactive_activity_plot(members_data, donation_weight=1.0, donation_received_weight=0.5,
                                      attack_win_weight=1.5, trophy_scale=1000.0, attack_base_weight=1.0):
@@ -442,7 +441,25 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
     # HTML für den Timestamp erstellen
     timestamp_html = f"<hr><p><em>Daten vom: {current_time}</em></p>"
 
-    # Gesamtes HTML erstellen mit allen Tabellen vor dem Erklärungstext und dem Timestamp
+    # Download-Schaltfläche hinzufügen als 'a' Tag, der wie ein Button aussieht
+    download_button_html = """
+    <div style="margin-top: 20px;">
+        <a href="/clan-activity?download=true" download="clan_activity.html" style="
+            display: inline-block;
+            background-color: #2E75B6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            text-align: center;
+        ">Download HTML</a>
+    </div>
+    """
+
+    # Gesamtes HTML erstellen mit allen Tabellen, Erklärungstext, Download-Schaltfläche und dem Timestamp
     full_html = f"""
     <!DOCTYPE html>
     <html>
@@ -460,6 +477,7 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
         {plot_div}
         {full_tables_html}
         {explanation_text}
+        {download_button_html}
         {timestamp_html}
         <script>
             $(document).ready(function() {{
@@ -489,29 +507,26 @@ def create_interactive_activity_plot(members_data, donation_weight=1.0, donation
 
     return full_html
 
-
-# FastAPI-Endpunkt definieren
-@app.get("/clan-activity")
-async def clan_activity():
+async def generate_html_content():
     """
-    Hauptfunktion, die den Workflow steuert und das Ergebnis als HTML zurückgibt.
+    Generiert den HTML-Inhalt für die Clan-Aktivitätsseite.
     """
     # Überprüfen, ob E-Mail und Passwort gesetzt sind
     if not COC_EMAIL or not COC_PASSWORD:
-        return HTMLResponse(content="COC_EMAIL oder COC_PASSWORD ist nicht gesetzt. Bitte überprüfen Sie Ihre Environment Variables.", status_code=500)
+        raise ValueError("COC_EMAIL oder COC_PASSWORD ist nicht gesetzt.")
 
     # coc.py Client initialisieren
     async with coc.Client() as coc_client:
         try:
             await coc_client.login(COC_EMAIL, COC_PASSWORD)
         except coc.InvalidCredentials as error:
-            return HTMLResponse(content=f"Ungültige Anmeldedaten: {error}", status_code=500)
+            raise ValueError(f"Ungültige Anmeldedaten: {error}")
 
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Start der Datenabfrage...")
         members = await get_clan_members(CLAN_TAG, coc_client)
 
         if not members:
-            return HTMLResponse(content="Keine Mitgliederinformationen abgerufen. Beende das Programm.", status_code=500)
+            raise ValueError("Keine Mitgliederinformationen abgerufen.")
 
         # Für jedes Mitglied die zusätzlichen Daten abrufen
         tasks = [get_player_data(member.tag, coc_client) for member in members]
@@ -542,7 +557,31 @@ async def clan_activity():
         )
         print("Interaktiver Plot erfolgreich erstellt.")
 
+        return html_content
+
+@app.get("/clan-activity")
+async def clan_activity(download: bool = Query(False, description="Setze auf true, um die HTML als Download zu erhalten")):
+    """
+    Hauptfunktion, die den Workflow steuert und das Ergebnis entweder als HTML anzeigt oder zum Download anbietet.
+    """
+    try:
+        html_content = await generate_html_content()
+    except ValueError as e:
+        return HTMLResponse(content=str(e), status_code=500)
+
+    if download:
+        # Verwende StringIO, um den HTML-Inhalt als Datei zu behandeln
+        buffer = StringIO(html_content)
+        buffer.seek(0)
+        return StreamingResponse(
+            buffer,
+            media_type="text/html",
+            headers={
+                "Content-Disposition": "attachment; filename=clan_activity.html"
+            }
+        )
+    else:
         return HTMLResponse(content=html_content, status_code=200)
 
-# Mangum Handler hinzufügen
+# Mangum Handler hinzufügen für serverlose Umgebungen wie Vercel
 handler = Mangum(app)
