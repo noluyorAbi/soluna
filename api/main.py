@@ -24,12 +24,22 @@ COC_EMAIL = os.getenv('COC_EMAIL')
 COC_PASSWORD = os.getenv('COC_PASSWORD')
 CLAN_TAG = '#2LUVL2QGL'  # Ersetzen Sie dies mit Ihrem Clan-Tag
 
-# Gewichtungsfaktoren einstellen (können nach Bedarf angepasst werden)
+
+"""  INITAL
 DONATION_WEIGHT = 1.0           # Gewichtung für Spenden Gegeben
 DONATION_RECEIVED_WEIGHT = 0.5  # Gewichtung für Spenden Erhalten
 ATTACK_WIN_WEIGHT = 1.5         # Basisgewichtung für gewonnene Angriffe
 TROPHY_SCALE = 1000.0           # Skalierungsfaktor für Trophäen
 ATTACK_BASE_WEIGHT = 1.0        # Basisgewichtungsfaktor zusätzlich zum Skalierungsfaktor
+ """
+
+# Gewichtungsfaktoren einstellen (können nach Bedarf angepasst werden)
+DONATION_WEIGHT = 0.3           # Geringere Gewichtung für Spenden
+DONATION_RECEIVED_WEIGHT = 0.2  # Geringere Gewichtung für erhaltene Spenden
+ATTACK_WIN_WEIGHT = 3.0         # Stärkere Gewichtung für gewonnene Angriffe
+TROPHY_SCALE = 2000.0           # Zweitrangige Gewichtung für Trophäen
+ATTACK_BASE_WEIGHT = 1.0        # Basisgewicht für Angriffe
+
 
 # FastAPI-App initialisieren
 app = FastAPI()
