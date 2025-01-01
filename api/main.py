@@ -35,9 +35,9 @@ ATTACK_BASE_WEIGHT = 1.0        # Basisgewichtungsfaktor zusätzlich zum Skalier
 
 # Gewichtungsfaktoren einstellen (können nach Bedarf angepasst werden)
 DONATION_WEIGHT = 0.3           # Geringere Gewichtung für Spenden
-DONATION_RECEIVED_WEIGHT = 0.2  # Geringere Gewichtung für erhaltene Spenden
+DONATION_RECEIVED_WEIGHT = 0.1  # Geringere Gewichtung für erhaltene Spenden
 ATTACK_WIN_WEIGHT = 3.0         # Stärkere Gewichtung für gewonnene Angriffe
-TROPHY_SCALE = 2000.0           # Zweitrangige Gewichtung für Trophäen
+TROPHY_SCALE = 500.0           # Zweitrangige Gewichtung für Trophäen
 ATTACK_BASE_WEIGHT = 1.0        # Basisgewicht für Angriffe
 
 
