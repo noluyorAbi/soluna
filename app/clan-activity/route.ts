@@ -1,17 +1,19 @@
 // app/api/clan-activity/route.ts
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const backendUrl =
     process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
+  const search = request.nextUrl.search;
+
   try {
-    const response = await fetch(`${backendUrl}/clan-activity`);
+    const response = await fetch(`${backendUrl}/clan-activity${search}`);
     const htmlContent = await response.text();
 
     return new NextResponse(htmlContent, {
-      status: 200,
+      status: response.status,
       headers: { "Content-Type": "text/html" },
     });
   } catch (error) {

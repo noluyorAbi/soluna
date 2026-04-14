@@ -3,7 +3,7 @@
 </p>
 <p align="center"><h1 align="center">SOLUNA</h1></p>
 <p align="center">
-    <em>Seamless Chats, Real-Time Connections, Effortless Style</em>
+    <em>Clash-of-Clans Aktivitäts-Dashboard mit Live-Daten, interaktiven Charts und automatischer Interpretation</em>
 </p>
 <p align="center">
     <img src="https://img.shields.io/github/license/noluyorAbi/soluna?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
@@ -39,7 +39,55 @@
 
 ## 📍 Overview
 
-Soluna revolutionizes clan management for gaming communities by providing a dynamic dashboard that visualizes real-time activity data. Key features include seamless communication tools, responsive design, and robust data processing. Ideal for gaming enthusiasts and community leaders, Soluna enhances engagement and strategic planning with its intuitive interface and reliable performance.
+SOLUNA ist ein Web-Dashboard, das Aktivität, Spenden, Angriffe, Kriegsstatistik und Rathaus-Zusammensetzung eines Clash-of-Clans-Clans in Echtzeit visualisiert. Das Backend holt Live-Daten über die [coc.py](https://github.com/mathsman5133/coc.py)-Bibliothek, berechnet einen gewichteten Aktivitäts-Score pro Mitglied und rendert ein interaktives Plotly-Dashboard. Der Clan-Tag kann frei gewählt werden — das Dashboard lässt sich für beliebige Clans generieren.
+
+### Dashboard-Features
+
+- **Clan-Tag-Suche** auf der Startseite — jeder Clan per Tag analysierbar
+- **10 Metrik-Karten** mit Status-Ampel (schwach / solide / stark / exzellent)
+- **Automatische Interpretation** der Daten (Spenden-Bilanz, Top-Spender, Konzentration der Top-10 %, Trophäenspitze, Kriegsstern-Leader, potenziell inaktive Mitglieder)
+- **7 interaktive Charts** (Light-Theme, Plotly):
+  - Aktivitäts-Scatter mit Quartil-Farben und Ø/Median-Linien
+  - Horizontaler Spenden-Balken (gegeben vs. erhalten, sortiert nach Netto)
+  - Histogramm + Boxplot des Aktivitäts-Scores
+  - Kampf-Profil-Bubble (Trophäen × Angriffe, Größe = Spenden, Farbe = Rathaus)
+  - Rathaus-Donut
+  - Rollen-Donut
+  - Beitrags-Treemap (Fläche = Spenden, Farbe = Aktivität)
+- **Aktivitäts-Score v3** (ungedeckelt, lineare Rohwerte), gerendert als LaTeX via KaTeX — siehe [Scoring](#-aktivitäts-score-v3)
+- **Zweischichtige Interpretation**: jede Kachel zeigt oben den Fakt, darunter die Bedeutung in einfacher Sprache (inkl. Erklärung von „rechts-schief", „Konzentration", „Netto-Spenden" u. a.)
+- **Orientierungswerte-Tabelle** (was sind gute Werte pro Metrik)
+- **Deep-Explanation** im Dashboard: Formel, Gewichtungsbegründung, Vergleich zur Legacy-Formel v1, Saison-Hinweise, Quartil-Legende
+- **Mobile-responsive** (Breakpoints bei 960 / 640 / 420 px, scrollbare Tabellen, stackender Header)
+- **DataTables** (Top 5 / Bottom 5 / vollständige sortierbare Rangliste)
+- **HTML-Download** des vollständigen Dashboards pro Clan
+
+### 📐 Aktivitäts-Score v3
+
+Lineare, **ungedeckelte** Summe in natürlichen Einheiten. Wer 10× mehr leistet, hat 10× mehr Punkte — die reale Aktivitätsspanne bleibt sichtbar, statt in einer 0–100-Skala plattgedrückt zu werden.
+
+```
+Score = D_geg + 3 · A · m_T + 0.5 · W
+
+D_geg = Spenden gegeben (Saison)        → 1 Pkt pro Spende
+A     = Gewonnene Angriffe (Saison)     → 3 Pkt × Trophäen-Bonus
+W     = Kriegs-Sterne (lifetime)        → 0.5 Pkt (halbiert, weil kumulativ)
+m_T   = 0.8 + 0.5 · min(1, T/5000)      → bounded 0.8…1.3 (TH-Fairness, kein Cap)
+```
+
+Im Dashboard wird die Formel als echtes LaTeX gerendert (KaTeX), mit aufgeschlüsselten Teilformeln, Rechenbeispielen (aktiver TH13 ≈ 1.985 Pkt, Casual TH10 ≈ 290 Pkt, Leech ≈ 62 Pkt) und Orientierungs-Ampel (< 100 schwach, 100–500 solide, 500–1.500 stark, > 1.500 exzellent).
+
+**Warum v3 statt v2 oder v1?**
+
+| Version | Problem |
+|---------|---------|
+| **v1** (`0.3·D_geg + 0.1·D_erh + A·(1+T/500)`) | Trophäen-Bonus unbeschränkt (bis ≈11× bei TH17), Kriegs-Sterne ignoriert, erhaltene Spenden geben Punkte. |
+| **v2** (`100 · [0.4·D̂ + 0.3·Â·m_T + 0.15·Ŵ + 0.15·Bal]`) | Sättigende 0–100-Skala versteckte Leistungsunterschiede — ein Whale mit 10.000 Spenden sah aus wie einer mit 2.000. |
+| **v3** (aktuell, linear ungedeckelt) | Brutale Wahrheit: tatsächliche Aktivität wird direkt sichtbar. Trophäen-Bonus bleibt beschränkt (0.8–1.3) für TH-Fairness, aber nichts sonst ist gecappt. |
+
+**Beispiel-Spread** (echter Clan, 44 Mitglieder): Top 6.136 Pkt, Median ≈ 350 Pkt, Bottom 3,5 Pkt — ein Faktor von ~1.750× zwischen stärkster und schwächster Aktivität.
+
+Legacy-v1-Werte bleiben intern als `Aktivität_v1` erhalten (nicht angezeigt, für Vergleichszwecke verfügbar).
 
 ---
 
@@ -47,15 +95,14 @@ Soluna revolutionizes clan management for gaming communities by providing a dyna
 
 |      | Feature         | Summary       |
 | :--- | :---:           | :---          |
-| ⚙️  | **Architecture**  | <ul><li>Utilizes a modern stack with `<React>`, `<Next.js>`, and `<Tailwind CSS>` for frontend development.</li><li>Backend powered by `<FastAPI>` for efficient API handling and data processing.</li><li>Integrates `<Plotly.js>` for dynamic data visualization.</li></ul> |
-| 🔩 | **Code Quality**  | <ul><li>Strict type-checking with `<TypeScript>` ensures robust and error-free code.</li><li>Adheres to best practices with `<ESLint>` for linting and maintaining code standards.</li><li>Modular architecture promotes reusability and maintainability.</li></ul> |
-| 📄 | **Documentation** | <ul><li>Comprehensive setup instructions using `<npm>` and `<pip>` for easy installation.</li><li>Codebase primarily written in `<TypeScript>`, with clear language distribution.</li><li>Includes detailed configuration files like `tsconfig.json` and `package.json`.</li></ul> |
-| 🔌 | **Integrations**  | <ul><li>Seamless integration with `<Clash of Clans API>` for data retrieval.</li><li>Uses `<Axios>` for HTTP requests to interact with external services.</li><li>Incorporates `<Tailwind CSS>` for consistent styling across components.</li></ul> |
-| 🧩 | **Modularity**    | <ul><li>Component-based structure with `<React>` promotes modularity.</li><li>Separate configuration files for `<PostCSS>` and `<Tailwind CSS>` enhance flexibility.</li><li>Backend and frontend are decoupled, allowing independent development.</li></ul> |
-| 🧪 | **Testing**       | <ul><li>Testing commands available via `<npm>` to ensure code reliability.</li><li>Potential for integration with testing frameworks like `<Jest>` or `<Cypress>`.</li><li>Emphasis on maintaining high code coverage and quality assurance.</li></ul> |
-| ⚡️  | **Performance**   | <ul><li>Optimized build process with `<Next.js>` for fast rendering and loading.</li><li>Utilizes `<React>`'s efficient reconciliation for UI updates.</li><li>Backend performance enhanced by `<FastAPI>`'s asynchronous capabilities.</li></ul> |
-| 🛡️ | **Security**      | <ul><li>Environment variables used for secure credential management.</li><li>Includes middleware for CORS to handle cross-origin requests securely.</li><li>Potential for implementing additional security measures like OAuth.</li></ul> |
-| 📦 | **Dependencies**  | <ul><li>Managed via `<npm>` and `<pip>`, ensuring streamlined package management.</li><li>Key dependencies include `<React>`, `<Next.js>`, `<Tailwind CSS>`, and `<Axios>`.</li><li>Backend dependencies specified in `requirements.txt` for clarity.</li></ul> |
+| ⚙️  | **Architecture**  | <ul><li>Next.js 15 (App Router) Frontend mit TypeScript und Tailwind CSS.</li><li>FastAPI-Backend mit asynchronem [coc.py](https://github.com/mathsman5133/coc.py)-Client für die CoC-API.</li><li>Plotly (Python) rendert Server-seitig ein vollständig interaktives HTML-Dashboard.</li></ul> |
+| 📊 | **Analytics**     | <ul><li>Gewichteter Aktivitäts-Score pro Mitglied (Spenden, Angriffe, Trophäen-Multiplikator).</li><li>Quartil-basierte Visualisierung mit Durchschnitts- und Median-Referenzlinien.</li><li>Automatische datengetriebene Interpretation (Spenden-Konzentration, inaktive Mitglieder, Schiefe der Verteilung).</li></ul> |
+| 🎨 | **UI/UX**         | <ul><li>Light-Theme mit inline SVG-Icons (Lucide-Style), keine Emojis.</li><li>Responsive Grid, Status-farbkodierte Metrik-Karten.</li><li>Klare Trennung Dashboard / Interpretation / Rangliste / Erklärung.</li></ul> |
+| 🔌 | **Integrations**  | <ul><li>Offizielle Clash-of-Clans-API via `coc.py` (Auto-Login, Rate-Limiting).</li><li>Next.js API-Route als Proxy zwischen Frontend und Backend.</li></ul> |
+| 🧩 | **Modularity**    | <ul><li>Frontend und Backend komplett entkoppelt.</li><li>Eine einzelne FastAPI-Route `/clan-activity` erzeugt das gesamte Dashboard; Clan-Tag als Query-Parameter überschreibbar.</li></ul> |
+| ⚡️  | **Performance**   | <ul><li>Asynchrone Spieler-Daten-Abfrage (parallel via `asyncio.gather`).</li><li>Plotly-Charts laden per CDN, Fonts via Google Fonts.</li></ul> |
+| 🛡️ | **Security**      | <ul><li>CoC-Credentials ausschließlich über Umgebungsvariablen.</li><li>CORS-Middleware konfiguriert.</li><li>HTML-Escaping für Spielernamen und Clan-Tag.</li></ul> |
+| 📦 | **Dependencies**  | <ul><li>Frontend: `next`, `react`, `axios`, `plotly.js`, `tailwindcss`.</li><li>Backend: `fastapi`, `uvicorn`, `coc.py>=3.7`, `pandas`, `plotly`, `python-dotenv`.</li></ul> |
 
 ---
 
@@ -195,85 +242,95 @@ Soluna revolutionizes clan management for gaming communities by providing a dyna
 
 ### ☑️ Prerequisites
 
-Before getting started with soluna, ensure your runtime environment meets the following requirements:
+- **Node.js ≥ 18** (Frontend, Next.js 15)
+- **Python ≥ 3.11** (Backend, FastAPI + coc.py)
+- **Clash-of-Clans-Entwickler-Account** — Email + Passwort von [developer.clashofclans.com](https://developer.clashofclans.com) für die coc.py-Auto-Login-Methode
 
-- **Programming Language:** TypeScript
-- **Package Manager:** Npm, Pip
+### 🔐 Environment variables
 
+Lege im Backend-Verzeichnis eine `.env` an (das Frontend sucht zusätzlich nach `NEXT_PUBLIC_BACKEND_URL`):
+
+```env
+# Backend (./backend/.env oder je nach Projektaufbau ./.env)
+COC_EMAIL=deine-cocapi-email@example.com
+COC_PASSWORD=dein-cocapi-passwort
+
+# Frontend (./.env.local)
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+```
+
+Der Default-Clan-Tag (`#2LUVL2QGL`, SOLUNA) ist in `backend/api/main.py` als `CLAN_TAG` hinterlegt. Über die Startseite oder den Query-Parameter `?clan_tag=…` kannst du jeden anderen Clan abfragen.
 
 ### ⚙️ Installation
 
-Install soluna using one of the following methods:
-
-**Build from source:**
-
-1. Clone the soluna repository:
+1. Repository klonen:
 ```sh
 ❯ git clone https://github.com/noluyorAbi/soluna
-```
-
-2. Navigate to the project directory:
-```sh
 ❯ cd soluna
 ```
 
-3. Install the project dependencies:
-
-
-**Using `npm`** &nbsp; [<img align="center" src="https://img.shields.io/badge/npm-CB3837.svg?style={badge_style}&logo=npm&logoColor=white" />](https://www.npmjs.com/)
-
+2. **Frontend** installieren (Next.js):
 ```sh
 ❯ npm install
 ```
 
-
-**Using `pip`** &nbsp; [<img align="center" src="" />]()
-
+3. **Backend** in eigenem Verzeichnis aufsetzen:
 ```sh
-❯ echo 'INSERT-INSTALL-COMMAND-HERE'
+❯ cd backend
+❯ python3 -m venv venv
+❯ source venv/bin/activate
+❯ pip install -r api/requirements.txt
 ```
-
-
-
 
 ### 🤖 Usage
-Run soluna using the following command:
-**Using `npm`** &nbsp; [<img align="center" src="https://img.shields.io/badge/npm-CB3837.svg?style={badge_style}&logo=npm&logoColor=white" />](https://www.npmjs.com/)
 
+In zwei Terminals parallel laufen lassen:
+
+**Backend** (FastAPI + Uvicorn, Port 8000):
 ```sh
-❯ npm start
+❯ cd backend
+❯ source venv/bin/activate
+❯ uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-
-**Using `pip`** &nbsp; [<img align="center" src="" />]()
-
+**Frontend** (Next.js Dev-Server, Port 3000):
 ```sh
-❯ echo 'INSERT-RUN-COMMAND-HERE'
+❯ npm run dev
 ```
 
+Danach im Browser öffnen: `http://localhost:3000` → Clan-Tag eingeben (oder leer lassen für Default) → „Zum Aktivitäts-Plot“.
+
+Direkter Zugriff auf das Dashboard-HTML:
+
+```sh
+❯ curl "http://localhost:8000/clan-activity?clan_tag=%232LUVL2QGL" > dashboard.html
+```
 
 ### 🧪 Testing
-Run the test suite using the following command:
-**Using `npm`** &nbsp; [<img align="center" src="https://img.shields.io/badge/npm-CB3837.svg?style={badge_style}&logo=npm&logoColor=white" />](https://www.npmjs.com/)
+Aktuell keine automatisierten Tests eingerichtet. Vorhandene Frontend-Skripte:
 
 ```sh
-❯ npm test
-```
-
-
-**Using `pip`** &nbsp; [<img align="center" src="" />]()
-
-```sh
-❯ echo 'INSERT-TEST-COMMAND-HERE'
+❯ npm run lint       # ESLint
+❯ npm run build      # Production-Build verifizieren
 ```
 
 
 ---
 ## 📌 Project Roadmap
 
-- [X] **`Task 1`**: <strike>Implement feature one.</strike>
-- [ ] **`Task 2`**: Implement feature two.
-- [ ] **`Task 3`**: Implement feature three.
+- [X] **Interaktives Aktivitäts-Dashboard** mit Plotly-Charts
+- [X] **Clan-Tag-Suche** — beliebige Clans analysierbar
+- [X] **Light-Theme mit SVG-Icons** (Lucide), responsive Karten-Grid
+- [X] **Automatische Interpretation** (Top-Spender, Konzentration, inaktive Mitglieder)
+- [X] **Orientierungswerte** & Aktivitäts-Score-Dokumentation im Dashboard
+- [X] **Aktivitäts-Score v3** (ungedeckelt, lineare Rohwerte, TH-fairer Trophäen-Bonus)
+- [X] **Zweischichtige Interpretation** mit Begriffserklärung (rechts-schief, Konzentration, Netto-Spenden, …)
+- [X] **LaTeX-Formel-Rendering** via KaTeX
+- [X] **Mobile-responsive** Layout (Breakpoints 960 / 640 / 420 px)
+- [ ] Historische Zeitreihen (Saisonvergleiche persistieren)
+- [ ] Hero- und Truppen-Level in die Analyse einbeziehen
+- [ ] Kriegs-Log-Auswertung (CWL-Performance pro Mitglied)
+- [ ] Dark/Light-Mode-Toggle
 
 ---
 
